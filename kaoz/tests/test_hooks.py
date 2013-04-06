@@ -30,7 +30,8 @@ class HooksTestCase(unittest.TestCase):
 
     def test_config(self):
         self.assertTrue(self.config is not None)
-        self.assertTrue(self.config.get('hooks', 'directory') is None)
+        self.assertTrue(self.config.get('hooks', 'directory') is not None)
+        self.assertTrue(self.config.get('hooks', 'directory') == '')
 
     def test_load_hook_empty(self):
         self.config.set('hooks','directory','')
@@ -60,7 +61,10 @@ class HooksTestCase(unittest.TestCase):
         hooks = kaoz.hooks.Hooks(self.config)
         hooks.load_hook_modules()
         publisher = MockPublisher()
-        hooks.pubmsg(publisher, None, None)
+        pubm = hooks.pubmsg(publisher, None, None)
+        privm= hooks.privmsg(publisher, None, None)
+        self.assertTrue(pubm)
+        self.assertFalse(privm);
         sleep(0.1) # Test is racy
         with publisher.lock:
             self.assertTrue(publisher.calls==1)

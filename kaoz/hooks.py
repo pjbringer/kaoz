@@ -64,6 +64,12 @@ class Hooks(object):
 
     # API methods: methods bollow this line are meant to be forwarded to the extensions 
 
+    def join(self, publisher, connection, event):
+        return self._multiplex_method("join", publisher, connection, event)
+
+    def privmsg(self, publisher, connection, event):
+        return self._multiplex_method("privmsg", publisher, connection, event)
+
     def pubmsg(self, publisher, connection, event):
         return self._multiplex_method("pubmsg", publisher, connection, event)
 

@@ -110,6 +110,8 @@ class Publisher(irc.client.SimpleIRCClient):
         channel = event.target
         logger.info(u"Joined channel %s" % channel)
         self._chans[channel].mark_joined()
+        """Run hooks on public messages"""
+        self._hooks.join(self, connection, event)
 
     def on_kick(self, connection, event):
         """Kicked from a channel"""
@@ -143,8 +145,10 @@ class Publisher(irc.client.SimpleIRCClient):
         self.send(channel, u"I'm been invited here.")
 
     def on_privmsg(self, connection, event):
-        """Answer to a user privmsg and die on demand"""
-        self.connection.privmsg(event.source.nick,
+        """Answer to a user privmsg, via hooks, or fallback to defaut message"""
+        hook_reaction = self._hooks.privmsg(self, connection, event)
+        if not hook_reaction:
+            self.connection.privmsg(event.source.nick,
                                 u"I'm a bot, hence I will never answer")
 
     def on_pubmsg(self, connection, event):
