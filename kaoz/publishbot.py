@@ -12,6 +12,7 @@ import threading
 import traceback
 
 import kaoz.channel
+import kaoz.hooks
 
 try:
     import ssl
@@ -53,6 +54,8 @@ class Publisher(irc.client.SimpleIRCClient):
         self._stop = threading.Event()
         self.ircobj.execute_every(self._reconn_interval, self._check_connect)
         self.ircobj.execute_every(self._line_sleep, self._say_messages)
+        self._hooks = kaoz.hooks.Hooks(config)
+        self._hooks.load_hook_modules()
 
     def connect(self):
         """Connect to a server"""
@@ -143,6 +146,10 @@ class Publisher(irc.client.SimpleIRCClient):
         """Answer to a user privmsg and die on demand"""
         self.connection.privmsg(event.source.nick,
                                 u"I'm a bot, hence I will never answer")
+
+    def on_pubmsg(self, connection, event):
+        """Run hooks on public messages"""
+        self._hooks.pubmsg(self, connection, event)
 
     def send(self, channel, message):
         """Send a message to a channel. Join the channel before talking.
