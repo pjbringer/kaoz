@@ -30,8 +30,7 @@ class HooksTestCase(unittest.TestCase):
 
     def test_config(self):
         self.assertTrue(self.config is not None)
-        self.assertTrue(self.config.get('hooks', 'directory') is not None)
-        self.assertTrue(self.config.get('hooks', 'directory') == '/etc/kaoz/hooks')
+        self.assertTrue(self.config.get('hooks', 'directory') is None)
 
     def test_load_hook_empty(self):
         self.config.set('hooks','directory','')
