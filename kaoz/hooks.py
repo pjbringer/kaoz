@@ -7,6 +7,7 @@ import sys
 from os import listdir, walk
 from os.path import isfile, join, isdir
 from threading import Thread
+import traceback
 
 logger = logging.getLogger(__name__)
 
@@ -50,9 +51,11 @@ class Hooks(object):
             try:
                 method = getattr(mod, method_name)
                 method(*args, **kwargs)
-            except Exception as e:
+            except Exception:
                 logger.error("Error while running %s on hook: %s" % (str(method_name), str(mod)))
-                logger.error(str(e))
+                error_msg = traceback.format_exc()
+                quote_line = lambda x: '> ' + x
+                logger.error('\n'.join(map(quote_line, error_msg.split('\n'))))
 
         ans = False
         for m in self.modules:
