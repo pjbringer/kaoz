@@ -51,7 +51,7 @@ class Hooks(object):
                 method = getattr(mod, method_name)
                 method(*args, **kwargs)
             except Exception as e:
-                logger.error("Error while running pubmsg on hook: %s" % str(mod))
+                logger.error("Error while running %s on hook: %s" % (str(method_name), str(mod)))
                 logger.error(str(e))
 
         ans = False
