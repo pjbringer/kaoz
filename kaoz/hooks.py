@@ -44,13 +44,12 @@ class Hooks(object):
                 str(self.directory))
             return
         with self._lock:
-            for dir in walk(self.directory):
-                for filename in dir[2]:
-                    if filename.endswith('.py'):
-                        module = filename[:-3]
-                        self.modules.add(module)
-                    else:
-                        logger.info("Ignoring %s" % filename)
+            for filename in next(walk(self.directory))[2]:
+                if filename.endswith('.py'):
+                    module = filename[:-3]
+                    self.modules.add(module)
+                else:
+                    logger.info("Ignoring %s" % filename)
             for m in self.modules:
                 try:
                     if m in sys.modules:
@@ -61,6 +60,8 @@ class Hooks(object):
                         __import__(m)
                 except:
                     logger.error("Could not load hook: %s" % m)
+            for m in self.modules - set(sys.modules.keys()):
+                self.modules.remove(m)
 
     def _multiplex_method(self, method_name, *args, **kwargs):
         """Calls method_name on all modules that have it.
