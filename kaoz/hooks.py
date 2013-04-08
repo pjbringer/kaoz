@@ -59,7 +59,7 @@ class Hooks(object):
                     else:
                         logger.info("Loading %s" % m)
                         __import__(m)
-                except ImportError:
+                except:
                     logger.error("Could not load hook: %s" % m)
 
     def _multiplex_method(self, method_name, *args, **kwargs):
