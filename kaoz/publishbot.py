@@ -105,11 +105,10 @@ class Publisher(irc.client.SimpleIRCClient):
         """Join a new channel, say what we need"""
         # Check message is for me
         nick = event.source.nick
-        if nick != connection.get_nickname():
-            return
-        channel = event.target
-        logger.info(u"Joined channel %s" % channel)
-        self._chans[channel].mark_joined()
+        if nick == connection.get_nickname():
+            channel = event.target
+            logger.info(u"Joined channel %s" % channel)
+            self._chans[channel].mark_joined()
         """Run hooks on public messages"""
         self._hooks.join(self, connection, event)
 
