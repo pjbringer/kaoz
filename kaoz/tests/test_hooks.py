@@ -30,18 +30,18 @@ class HooksTestCase(unittest.TestCase):
 
     def test_config(self):
         self.assertTrue(self.config is not None)
-        self.assertTrue(self.config.get('hooks', 'directory') is not None)
-        self.assertTrue(self.config.get('hooks', 'directory') == '')
+        self.assertTrue(self.config.get('irc', 'hook_directory') is not None)
+        self.assertTrue(self.config.get('irc', 'hook_directory') == '')
 
     def test_load_hook_empty(self):
-        self.config.set('hooks','directory','')
+        self.config.set('irc', 'hook_directory', '')
         hooks = kaoz.hooks.Hooks(self.config)
         hooks.load_hook_modules()
         self.assertFalse('dummy' in sys.modules)
         self.assertFalse('dolly' in sys.modules)
 
     def test_load_hook_modules(self):
-        self.config.set('hooks','directory',self.tmp_dir_name)
+        self.config.set('irc', 'hook_directory', self.tmp_dir_name)
         hooks = kaoz.hooks.Hooks(self.config)
         hooks.load_hook_modules()
         self.assertTrue('dummy' in sys.modules)
@@ -57,7 +57,7 @@ class HooksTestCase(unittest.TestCase):
                 with self.lock:
                     self.calls += 1
                     self.valid = channel == '#dummy' and message == 'dummy pubmsg(None, None)'
-        self.config.set('hooks','directory',self.tmp_dir_name)
+        self.config.set('irc', 'hook_directory', self.tmp_dir_name)
         hooks = kaoz.hooks.Hooks(self.config)
         hooks.load_hook_modules()
         publisher = MockPublisher()

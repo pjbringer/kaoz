@@ -18,7 +18,7 @@ class Hooks(object):
     directory is passed in the configuration at Hooks object creation time.
     The extension modules are loaded with the load_hook_modules method."""
     def __init__(self, config):
-        self.directory = config.get('hooks', 'directory')
+        self.directory = config.get('irc', 'hook_directory')
         sys.path.append(self.directory);
         self.modules = []
 
