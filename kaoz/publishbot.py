@@ -145,9 +145,9 @@ class Publisher(irc.client.SimpleIRCClient):
 
     def on_privmsg(self, connection, event):
         """Answer to a user privmsg, via hooks, or fallback to defaut message"""
-        hook_reaction = self._hooks.privmsg(self, connection, event)
-        if not hook_reaction:
-            self.connection.privmsg(event.source.nick,
+        if self._hooks.privmsg(self, connection, event):
+            return
+        self.connection.privmsg(event.source.nick,
                                 u"I'm a bot, hence I will never answer")
 
     def on_pubmsg(self, connection, event):
