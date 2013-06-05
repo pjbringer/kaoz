@@ -4,6 +4,7 @@ After=network.target
 
 [Service]
 ExecStart=/usr/bin/kaoz
+ExecReload=/bin/kill -USR1 $MAINPID
 #User=
 
 [Install]
