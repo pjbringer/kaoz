@@ -36,7 +36,7 @@ class TCPListenerHandler(SocketServer.BaseRequestHandler):
                 return
         else:
             real_sock = self.request
-        self.rfile = real_sock.makefile('rb')
+        self.rfile = real_sock.makefile('rwb')
 
     def finish(self):
         if self.rfile is not None:
@@ -49,10 +49,14 @@ class TCPListenerHandler(SocketServer.BaseRequestHandler):
         logger.debug(u"Client connected from %s" % client_addr)
         for line in self.rfile:
             line = line.decode('utf-8')
-            self.publish_line(line)
+            resp = self.handle_line(line)
+            if resp is not None:
+                resp += '\n'
+                resp = resp.encode('utf-8')
+                self.rfile.write(resp)
         logger.debug(u"Client disconnected from %s" % client_addr)
 
-    def publish_line(self, line):
+    def handle_line(self, line):
         """publish a received line which is prefixed by 'password:'"""
         line = line.strip()
         if not line:
@@ -63,6 +67,19 @@ class TCPListenerHandler(SocketServer.BaseRequestHandler):
             return
         line = line[len(expected_prefix):]
         logger.debug(u"Received line %s" % line)
+        if line[0] == ':':
+            line = line[1:]
+            return self.process_line(line)
+        else:
+            return self.publish_line(line)
+
+    def process_line(self, line):
+        if line == 'channels':
+            return str(self.server.publisher.channels())
+        else:
+            return "Unknown command: %s" % line
+
+    def publish_line(self, line):
         self.server.publisher.send_line(line)
 
 

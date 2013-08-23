@@ -201,6 +201,9 @@ class Publisher(irc.client.SimpleIRCClient):
         """Tell wether the bot is connected or not"""
         return self.connection.is_connected() and self._has_welcome
 
+    def channels(self):
+        return ", ".join(self._chans.keys())
+
     def run(self):
         """Infinite loop of message processing"""
         # There is a periodic task which checks connection
@@ -263,6 +266,9 @@ class PublisherThread(threading.Thread):
 
         channel, message = line_parts
         self.send(channel, message)
+
+    def channels(self):
+        return self._publisher.channels()
 
     def __enter__(self):
         self.start()
