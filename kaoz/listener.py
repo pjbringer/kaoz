@@ -74,10 +74,7 @@ class TCPListenerHandler(SocketServer.BaseRequestHandler):
             return self.publish_line(line)
 
     def process_line(self, line):
-        if line == 'channels':
-            return str(self.server.publisher.channels())
-        else:
-            return "Unknown command: %s" % line
+        return self.server.publisher.call_command(line)
 
     def publish_line(self, line):
         self.server.publisher.send_line(line)

@@ -177,9 +177,8 @@ class Publisher(irc.client.SimpleIRCClient):
 
         # Join the channel if needed
         if chanstatus.need_join():
-            if chanstatus.inc_join_counter(self._max_join_attempts,
-                                           self._memory_timeout):
-                self.connection.join(chanstatus.name)
+            if join(chanstatus.name):
+                pass
             elif self._fallbackchan and chanstatus.name != self._fallbackchan:
                 # Channel is blocked. Do fallback !
                 logger.warning(u"Channel %s is blocked. Using fallback" %
@@ -202,7 +201,20 @@ class Publisher(irc.client.SimpleIRCClient):
         return self.connection.is_connected() and self._has_welcome
 
     def channels(self):
-        return ", ".join(self._chans.keys())
+        """List of connected-to channels"""
+        return self._chans.keys()
+
+    def join(self, channel):
+        """Joins channel unless too many attempts were made"""
+        logger.critical(channel)
+        chanstatus = self._chans[channel]
+        if chanstatus.inc_join_counter(self._max_join_attempts,self._memory_timeout):
+            self.connection.join(channel)
+            return True
+        return False
+
+    def leave(self, channel):
+        self.connection.part(channel)
 
     def run(self):
         """Infinite loop of message processing"""
@@ -225,6 +237,47 @@ class Publisher(irc.client.SimpleIRCClient):
         self.connection.close()
 
 
+class PublisherAPI(object):
+    """Input validator and output formatter for commands.
+
+    This callable class marshalls commands to a publisher. It checks arguments
+    and formats outputs.
+    """
+    def __init__(self, publisher):
+        self._publisher = publisher
+        self._commands = [
+            'channels',     # No arguments - returns list of channels that the bot is in.
+            'is_connected', # No arguments - return 'True' if the bot is connected to the irc server
+            'join',         # channel      - joins the given channel
+            'leave'         # channel      - leaves the given channel
+        ]
+
+    def __call__(self, command, *args):
+        """This is the api of the class"""
+        if command in self._commands:
+            return getattr(self, command)(*args)
+
+    def channels(self, *args):
+        if len(args):
+            return 'Command "channels" takes 0 arguments, %d were given: %s' % (len(args), ' '.join(args))
+        return '\n'.join(self._publisher.channels())
+
+    def is_connected(self, *args):
+        if len(args):
+            return 'Command "is_connected" takes 0 arguments, %d were given: %s' % (len(args), ' '.join(args))
+        return str(self._publisher.is_connected())
+
+    def join(self, *args):
+        if len(args) != 1:
+            return 'Command "join" takes 1 argument, %d were given: %s' % (len(args), ' '.join(args))
+        return str(self._publisher.join(args[0]))
+
+    def leave(self, *args):
+        if len(args) != 1:
+            return 'Command "leave" takes 1 argument, %d were given: %s' % (len(args), ' '.join(args))
+        return self._publisher.leave(args[0])
+
+
 class PublisherThread(threading.Thread):
     """Thread to manage a Publisher"""
 
@@ -233,6 +286,7 @@ class PublisherThread(threading.Thread):
         optionally set an event when the thread ends.
         """
         self._publisher = Publisher(config, *args, **kwargs)
+        self._api = PublisherAPI(self._publisher)
         super(PublisherThread, self).__init__()
         self._event = event
         self._debug = debug
@@ -267,8 +321,11 @@ class PublisherThread(threading.Thread):
         channel, message = line_parts
         self.send(channel, message)
 
-    def channels(self):
-        return self._publisher.channels()
+    def call_command(self, line):
+        line_tokens = line.split(' ')
+        command = line_tokens[0]
+        args = line_tokens[1:]
+        return self._api(command, *args)
 
     def __enter__(self):
         self.start()
