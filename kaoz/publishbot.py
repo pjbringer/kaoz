@@ -206,7 +206,6 @@ class Publisher(irc.client.SimpleIRCClient):
 
     def join(self, channel):
         """Joins channel unless too many attempts were made"""
-        logger.critical(channel)
         chanstatus = self._chans[channel]
         if chanstatus.inc_join_counter(self._max_join_attempts,self._memory_timeout):
             self.connection.join(channel)
