@@ -91,6 +91,8 @@ The double colon indicates that it is a command, rather than a message to send. 
 * `channels`
 * `join #help`
 * `leave #help`
+* `kick #help nagger`
+* `nick newnick`
 
 About IRC style and colors
 -------------------------
