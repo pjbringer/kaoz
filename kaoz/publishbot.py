@@ -212,9 +212,6 @@ class Publisher(irc.client.SimpleIRCClient):
             return True
         return False
 
-    def leave(self, channel):
-        self.connection.part(channel)
-
     def run(self):
         """Infinite loop of message processing"""
         # There is a periodic task which checks connection
@@ -244,17 +241,24 @@ class PublisherAPI(object):
     """
     def __init__(self, publisher):
         self._publisher = publisher
+        self.connection = publisher.connection
         self._commands = [
-            'channels',     # No arguments - returns list of channels that the bot is in.
-            'is_connected', # No arguments - return 'True' if the bot is connected to the irc server
-            'join',         # channel      - joins the given channel
-            'leave'         # channel      - leaves the given channel
+            'channels',     # No arguments   - returns list of channels that the bot is in.
+            'is_connected', # No arguments   - return 'True' if the bot is connected to the irc server
+            'join',         # channel        - joins the given channel
+            'leave',        # channel        - leaves the given channel
+            'kick',         # channel target - kicks target out of channem
+            'nick'          # newnick        - changes nick
         ]
 
     def __call__(self, command, *args):
         """This is the api of the class"""
-        if command in self._commands:
+        if command not in self._commands:
+            return 'Unknown command %s' % command
+        try:
             return getattr(self, command)(*args)
+        except AttributeError:
+            return getattr(self.connection, command)(*args)
 
     def channels(self, *args):
         if len(args):
@@ -274,7 +278,7 @@ class PublisherAPI(object):
     def leave(self, *args):
         if len(args) != 1:
             return 'Command "leave" takes 1 argument, %d were given: %s' % (len(args), ' '.join(args))
-        return self._publisher.leave(args[0])
+        return self.connection.part(args[0])
 
 
 class PublisherThread(threading.Thread):
